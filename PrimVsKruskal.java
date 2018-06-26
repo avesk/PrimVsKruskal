@@ -148,19 +148,72 @@ public class PrimVsKruskal{
     }
 
     static boolean PvKConcurrent(double[][] G) {
+        int N = G.length;
         EdgeWeightedGraph EG = buildGraph(G);
         MyKruskalMST Kruskal = new MyKruskalMST(EG);
         MyPrimMST Prim = new MyPrimMST(EG);
-        Edge ek, ep;
+        boolean[][] key = new boolean[N][N];
+        UF kpuf = new UF(N);
 
+        Edge ek, ep;
+        int v;
+        int w;
         while(!Prim.pq.isEmpty() || ( !Kruskal.pq.isEmpty() && Kruskal.mst.size() < Kruskal.N-1 ) ) {
             ek = Kruskal.addEdge();
-            StdOut.printf("Kruskal: (%s)\n", ek.toString());
+
+            if(ek.weight() > -1) {
+                StdOut.printf("Kruskal: (%s)\n", ek.toString());
+                v = ek.either();
+                w = ek.other(v);
+                if(!key[v][w] || !key[w][v]) {
+                    if(kpuf.connected(v, w)) {
+                        // StdOut.printf("Divergent Edge: %d-%d\n", vp, wp);
+                        return false;
+                    }
+                }
+
+                kpuf.union(v, w);
+                key[v][w] = true;
+                key[w][v] = true;
+            }
+
+
             ep = Prim.addEdge();
-            StdOut.printf("Prim: (%s)\n", ep.toString());
+
+            if(ep.weight() > -1) {
+                StdOut.printf("Prim: (%s)\n", ep.toString());
+                v = ep.either();
+                w = ep.other(v);
+                if(!key[v][w] || !key[w][v]) {
+                    if(kpuf.connected(v, w)) {
+                        // StdOut.printf("Divergent Edge: %d-%d\n", vp, wp);
+                        return false;
+                    }
+                }
+                kpuf.union(v, w);
+                key[v][w] = true;
+                key[w][v] = true;
+            }
+
         }
         return true;
     }
+
+    // static boolean createsCycle(Edge e, UF uf, boolean[][] key) {
+    //     int v = e.either();
+    //     int w = e.other(v);
+    //     if(!key[v][w]) {
+    //         if(uf.connected(v, w)) {
+    //             // StdOut.printf("Divergent Edge: %d-%d\n", vp, wp);
+    //             return true;
+    //         }
+    //     } else {
+    //         kpuf.union(v, w);
+    //         key[v][w] = true;
+    //         key[w][v] = true;
+    //     }
+    //     return false;
+    // }
 
     static boolean parallelPrimVsKruskal(double[][] G) {
         int N = G.length;
@@ -335,7 +388,6 @@ public class PrimVsKruskal{
 		/* Determine if the MST by Prim equals the MST by Kruskal */
 		boolean pvk = true;
 		/* ... Your code here ... */
-        pvk = naiveSolution(EG, n);
 
 		return pvk;
 	}
@@ -376,12 +428,14 @@ public class PrimVsKruskal{
     }
 
     /**
-     * [naiveSolution description]
+     *
      * @param  EG [description]
      * @param  N  number of nodes in the graph
      * @return    [description]
      */
-    public static boolean naiveSolution(EdgeWeightedGraph EG, int N) {
+    public static boolean naiveSolution(double[][] G) {
+        int N = G.length;
+        EdgeWeightedGraph EG = buildGraph(G);
         boolean[][] key = new boolean[N][N];
         int v, w;
 
@@ -500,7 +554,8 @@ public class PrimVsKruskal{
 			System.out.printf("Adjacency matrix for the graph contains too few values.\n");
 			return;
 		}
-        boolean pvk = PvKConcurrent(G);
+        // boolean pvk = PvKConcurrent(G);
+        boolean pvk = naiveSolution(G);
         // G = generateRandomGraph(20);
         // boolean pvk = PrimVsKruskal(G);
         System.out.printf("Does Prim MST = Kruskal MST? %b\n", pvk);
