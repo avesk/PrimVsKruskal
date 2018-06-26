@@ -167,6 +167,8 @@ public class PrimVsKruskal{
         MyPrimMST Prim = new MyPrimMST(EG);
         boolean[][] key = new boolean[N][N];
         UF kpuf = new UF(N);
+        double kruskalWeight = 0.0;
+        double primWeight = 0.0;
 
         Edge ek, ep;
         int v;
@@ -175,12 +177,14 @@ public class PrimVsKruskal{
             ek = Kruskal.addEdge();
 
             if(ek.weight() > -1) {
+                kruskalWeight += ek.weight();
                 StdOut.printf("Kruskal: (%s)\n", ek.toString());
                 v = ek.either();
                 w = ek.other(v);
                 if(!key[v][w] || !key[w][v]) {
                     if(kpuf.connected(v, w)) {
-                        return false;
+                        StdOut.println("DIVERGENCE!");
+                        // return false;
                     }
                 }
 
@@ -193,12 +197,14 @@ public class PrimVsKruskal{
             ep = Prim.addEdge();
 
             if(ep.weight() > -1) {
-                // StdOut.printf("Prim: (%s)\n", ep.toString());
+                primWeight += ep.weight();
+                StdOut.printf("Prim: (%s)\n", ep.toString());
                 v = ep.either();
                 w = ep.other(v);
                 if(!key[v][w] || !key[w][v]) {
                     if(kpuf.connected(v, w)) {
-                        return false;
+                        StdOut.println("DIVERGENCE!");
+                        // return false;
                     }
                 }
                 kpuf.union(v, w);
@@ -207,6 +213,8 @@ public class PrimVsKruskal{
             }
 
         }
+        StdOut.printf("Kruskal's Weight: (%f)\n", kruskalWeight);
+        StdOut.printf("Prim's Weight: (%f)\n", primWeight);
         return true;
     }
 
