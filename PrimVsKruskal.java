@@ -110,11 +110,11 @@ public class PrimVsKruskal{
         private boolean[] marked;
         public IndexMinPQ<Double> pq;
         public int N;
-        private EdgeWeightedGraph G;
+        private double[][] G;
 
-        public MyPrimMST(EdgeWeightedGraph G) {
+        public MyPrimMST(double[][] G) {
             this.G = G;
-            this.N = G.V();
+            this.N = G.length;
             int N = this.N;
             this.distTo = new double[N];
             this.marked = new boolean[N];
@@ -131,15 +131,16 @@ public class PrimVsKruskal{
 
         public Edge addEdge() {
             int N = this.N;
+            double weight;
             if(!this.pq.isEmpty()) {
                 int v = this.pq.delMin();
                 this.marked[v] = true;
-                for (Edge e : this.G.adj(v)) {
-                    int w = e.other(v);
-                    if (this.marked[w]) continue;
-                    if (e.weight() < this.distTo[w]) {
-                        this.edgeTo[w] = e;
-                        this.distTo[w] = e.weight();
+                for (int w = 0; w < this.N; w++) { // for each edge on v
+                    weight = this.G[v][w];
+                    if(weight == 0.0 || this.marked[w]) continue;
+                    if (weight < this.distTo[w]) {
+                        this.edgeTo[w] = new Edge(v, w, weight);;
+                        this.distTo[w] = weight;
                         if (this.pq.contains(w)) this.pq.changeKey(w, distTo[w]);
                         else this.pq.insert(w, this.distTo[w]);
                     }
@@ -164,7 +165,7 @@ public class PrimVsKruskal{
         int N = G.length;
         EdgeWeightedGraph EG = buildGraph(G);
         MyKruskalMST Kruskal = new MyKruskalMST(G);
-        MyPrimMST Prim = new MyPrimMST(EG);
+        MyPrimMST Prim = new MyPrimMST(G);
         boolean[][] key = new boolean[N][N];
         UF kpuf = new UF(N);
         double kruskalWeight = 0.0;
