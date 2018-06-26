@@ -50,46 +50,117 @@ public class PrimVsKruskal{
 	*/
 
     /**
+     * Kruskal's Algorithm
+     */
+    public static class MyKruskalMST {
+
+        public Queue<Edge> mst = new Queue<Edge>();
+        public MinPQ<Edge> pq = new MinPQ<Edge>();
+        private UF uf;
+        public int N;
+
+        public MyKruskalMST(EdgeWeightedGraph G) {
+            this.N = G.V();
+            // Initialize kruskal pq
+            for(Edge e : G.edges()) {
+                this.pq.insert(e);
+            }
+
+            // Initialize Disjoint Set datastructure
+            this.uf = new UF(N);
+        }
+
+        public Edge addEdge() {
+            int N = this.N;
+            if(!this.pq.isEmpty() && this.mst.size() < N-1) {
+                Edge e = this.pq.delMin();
+                int v = e.either();
+                int w = e.other(v);
+                if(!this.uf.connected(v, w)) {
+                    this.uf.union(v, w);
+                    mst.enqueue(e);
+                    return e;
+                }
+            }
+            return new Edge(1,1,-1.0);
+        }
+
+    }
+
+    /**
      * Prim's Algorithm
      */
-    // public class PrimMST {
-    //     private Edge[] edgeTo; // shortest edge from tree to vertex
-    //     private double[] distTo; // distTo[w] = edgeTo[w].weight()
-    //     private boolean[] marked; // true if v in mst
-    //     private IndexMinPQ<Edge> pq; // eligible crossing edges
-    //
-        // public PrimMST(WeightedGraph G) {
-        //     edgeTo = new Edge[G.V()];
-        //     distTo = new double[G.V()];
-        //     marked = new boolean[G.V()];
-        //
-        //     for(int v = 0; v < G.V(); v++) {
-        //         distTo[v] = Double.POSITIVE_INFINITY;
-        //     }
-        //
-        //     pq = new IndexMinPQ<Double>(G.V());
-        //     distTo[0[ = 0.0;
-        //     pq.insert(0, 0.0);
-            // while(!pq.isEmpty()) {
-            //     visit(G, pq.delMin());
-            // }
-        //
-        // }
-    //
-    //     private void visit(WeightedGraph G, int v) {
-    //         marked[v] = true;
-    //         for (Edge e : G.adj(v)) {
-    //             int w = e.other(v);
-    //             if (marked[w]) continue;
-    //             if (e.weight() < distTo[w]) {
-    //                 edgeTo[w] = e;
-    //                 distTo[w] = e.weight();
-    //                 if (pq.contains(w)) pq.changeKey(w, distTo[w]);
-    //                 else pq.insert(w, distTo[w]);
-    //             }
-    //         }
-    //     }
-    // }
+    public static class MyPrimMST {
+
+        public Edge[] edgeTo;
+        public double[] distTo;
+        private boolean[] marked;
+        public IndexMinPQ<Double> pq;
+        public int N;
+        private EdgeWeightedGraph G;
+
+        public MyPrimMST(EdgeWeightedGraph G) {
+            this.G = G;
+            this.N = G.V();
+            int N = this.N;
+            this.distTo = new double[N];
+            this.marked = new boolean[N];
+            this.edgeTo = new Edge[N];
+            this.pq = new IndexMinPQ<Double>(N);
+
+            this.distTo[0] = 0.0;
+            this.pq.insert(0, 0.0);
+            for(int v = 0; v < this.N; v++) {
+                this.distTo[v] = Double.POSITIVE_INFINITY;
+            }
+
+        }
+
+        public Edge addEdge() {
+            int N = this.N;
+            if(!this.pq.isEmpty()) {
+                int v = this.pq.delMin();
+                this.marked[v] = true;
+                for (Edge e : this.G.adj(v)) {
+                    int w = e.other(v);
+                    if (this.marked[w]) continue;
+                    if (e.weight() < this.distTo[w]) {
+                        this.edgeTo[w] = e;
+                        this.distTo[w] = e.weight();
+                        if (this.pq.contains(w)) this.pq.changeKey(w, distTo[w]);
+                        else this.pq.insert(w, this.distTo[w]);
+                    }
+                }
+
+                return this.getAddedEdge();
+            }
+            return new Edge(1,1,-1.0);
+        }
+
+        private Edge getAddedEdge() {
+            if(this.pq.isEmpty()) {
+                return new Edge(1,1,-1.0);
+            }
+
+            return this.edgeTo[this.pq.minIndex()];
+        }
+
+    }
+
+    static boolean PvKConcurrent(double[][] G) {
+        EdgeWeightedGraph EG = buildGraph(G);
+        MyKruskalMST Kruskal = new MyKruskalMST(EG);
+        MyPrimMST Prim = new MyPrimMST(EG);
+        Edge ek, ep;
+
+        while(!Prim.pq.isEmpty() || ( !Kruskal.pq.isEmpty() && Kruskal.mst.size() < Kruskal.N-1 ) ) {
+            ek = Kruskal.addEdge();
+            StdOut.printf("Kruskal: (%s)\n", ek.toString());
+            ep = Prim.addEdge();
+            StdOut.printf("Prim: (%s)\n", ep.toString());
+        }
+        return true;
+    }
 
     static boolean parallelPrimVsKruskal(double[][] G) {
         int N = G.length;
@@ -429,8 +500,9 @@ public class PrimVsKruskal{
 			System.out.printf("Adjacency matrix for the graph contains too few values.\n");
 			return;
 		}
+        boolean pvk = PvKConcurrent(G);
         // G = generateRandomGraph(20);
-        boolean pvk = PrimVsKruskal(G);
+        // boolean pvk = PrimVsKruskal(G);
         System.out.printf("Does Prim MST = Kruskal MST? %b\n", pvk);
     }
 }
