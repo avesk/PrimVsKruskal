@@ -552,8 +552,8 @@ public class PrimVsKruskal{
 			System.out.printf("Adjacency matrix for the graph contains too few values.\n");
 			return;
 		}
-        // boolean pvk = PvKConcurrent(G);
-        boolean pvk = naiveSolution(G);
+        boolean pvk = PvKConcurrent(G);
+        // boolean pvk = naiveSolution(G);
         // G = generateRandomGraph(20);
         // boolean pvk = PrimVsKruskal(G);
         System.out.printf("Does Prim MST = Kruskal MST? %b\n", pvk);
