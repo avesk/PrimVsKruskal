@@ -162,12 +162,11 @@ public class PrimVsKruskal{
             ek = Kruskal.addEdge();
 
             if(ek.weight() > -1) {
-                StdOut.printf("Kruskal: (%s)\n", ek.toString());
+                // StdOut.printf("Kruskal: (%s)\n", ek.toString());
                 v = ek.either();
                 w = ek.other(v);
                 if(!key[v][w] || !key[w][v]) {
                     if(kpuf.connected(v, w)) {
-                        // StdOut.printf("Divergent Edge: %d-%d\n", vp, wp);
                         return false;
                     }
                 }
@@ -181,12 +180,11 @@ public class PrimVsKruskal{
             ep = Prim.addEdge();
 
             if(ep.weight() > -1) {
-                StdOut.printf("Prim: (%s)\n", ep.toString());
+                // StdOut.printf("Prim: (%s)\n", ep.toString());
                 v = ep.either();
                 w = ep.other(v);
                 if(!key[v][w] || !key[w][v]) {
                     if(kpuf.connected(v, w)) {
-                        // StdOut.printf("Divergent Edge: %d-%d\n", vp, wp);
                         return false;
                     }
                 }
