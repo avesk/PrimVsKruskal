@@ -59,15 +59,31 @@ public class PrimVsKruskal{
         private UF uf;
         public int N;
 
-        public MyKruskalMST(EdgeWeightedGraph G) {
-            this.N = G.V();
+        public MyKruskalMST(double[][] G) {
+            this.N = G.length;
             // Initialize kruskal pq
-            for(Edge e : G.edges()) {
-                this.pq.insert(e);
-            }
+            this.initPQ(G);
+            // for(Edge e : G.edges()) {
+            //     this.pq.insert(e);
+            // }
 
             // Initialize Disjoint Set datastructure
             this.uf = new UF(N);
+        }
+
+        public void initPQ(double[][] G) {
+            Edge e;
+            double weight;
+            int N = G.length;
+            for(int i = 0; i < N; i++) {
+                for(int j = i; j < N; j++) {
+                    weight = G[i][j];
+                    if(weight != 0) {
+                        e = new Edge(i, j, weight);
+                        this.pq.insert(e);
+                    }
+                }
+            }
         }
 
         public Edge addEdge() {
@@ -150,7 +166,7 @@ public class PrimVsKruskal{
     static boolean PvKConcurrent(double[][] G) {
         int N = G.length;
         EdgeWeightedGraph EG = buildGraph(G);
-        MyKruskalMST Kruskal = new MyKruskalMST(EG);
+        MyKruskalMST Kruskal = new MyKruskalMST(G);
         MyPrimMST Prim = new MyPrimMST(EG);
         boolean[][] key = new boolean[N][N];
         UF kpuf = new UF(N);
@@ -162,7 +178,7 @@ public class PrimVsKruskal{
             ek = Kruskal.addEdge();
 
             if(ek.weight() > -1) {
-                // StdOut.printf("Kruskal: (%s)\n", ek.toString());
+                StdOut.printf("Kruskal: (%s)\n", ek.toString());
                 v = ek.either();
                 w = ek.other(v);
                 if(!key[v][w] || !key[w][v]) {
@@ -552,8 +568,8 @@ public class PrimVsKruskal{
 			System.out.printf("Adjacency matrix for the graph contains too few values.\n");
 			return;
 		}
-        // boolean pvk = PvKConcurrent(G);
-        boolean pvk = naiveSolution(G);
+        boolean pvk = PvKConcurrent(G);
+        // boolean pvk = naiveSolution(G);
         // G = generateRandomGraph(20);
         // boolean pvk = PrimVsKruskal(G);
         System.out.printf("Does Prim MST = Kruskal MST? %b\n", pvk);
