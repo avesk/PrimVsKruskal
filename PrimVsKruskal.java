@@ -63,9 +63,6 @@ public class PrimVsKruskal{
             this.N = G.length;
             // Initialize kruskal pq
             this.initPQ(G);
-            // for(Edge e : G.edges()) {
-            //     this.pq.insert(e);
-            // }
 
             // Initialize Disjoint Set datastructure
             this.uf = new UF(N);
