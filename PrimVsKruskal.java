@@ -161,6 +161,10 @@ public class PrimVsKruskal{
 
     }
 
+    /**
+     * Run Prims and Kruskals concurrently, adding edge by edge testing for cycles
+     * @param  G adjacency matrix
+     */
     static boolean PvKConcurrent(double[][] G) {
         int N = G.length;
         EdgeWeightedGraph EG = buildGraph(G);
@@ -179,13 +183,12 @@ public class PrimVsKruskal{
 
             if(ek.weight() > -1) {
                 kruskalWeight += ek.weight();
-                StdOut.printf("Kruskal: (%s)\n", ek.toString());
+                // StdOut.printf("Kruskal: (%s)\n", ek.toString());
                 v = ek.either();
                 w = ek.other(v);
                 if(!key[v][w] || !key[w][v]) {
                     if(kpuf.connected(v, w)) {
-                        StdOut.println("DIVERGENCE!");
-                        // return false;
+                        return false;
                     }
                 }
 
@@ -199,13 +202,12 @@ public class PrimVsKruskal{
 
             if(ep.weight() > -1) {
                 primWeight += ep.weight();
-                StdOut.printf("Prim: (%s)\n", ep.toString());
+                // StdOut.printf("Prim: (%s)\n", ep.toString());
                 v = ep.either();
                 w = ep.other(v);
                 if(!key[v][w] || !key[w][v]) {
                     if(kpuf.connected(v, w)) {
-                        StdOut.println("DIVERGENCE!");
-                        // return false;
+                        return false;
                     }
                 }
                 kpuf.union(v, w);
@@ -214,199 +216,15 @@ public class PrimVsKruskal{
             }
 
         }
-        StdOut.printf("Kruskal's Weight: (%f)\n", kruskalWeight);
-        StdOut.printf("Prim's Weight: (%f)\n", primWeight);
+        // StdOut.printf("Kruskal's Weight: (%f)\n", kruskalWeight);
+        // StdOut.printf("Prim's Weight: (%f)\n", primWeight);
         return true;
-    }
-
-    // static boolean createsCycle(Edge e, UF uf, boolean[][] key) {
-    //     int v = e.either();
-    //     int w = e.other(v);
-    //     if(!key[v][w]) {
-    //         if(uf.connected(v, w)) {
-    //             // StdOut.printf("Divergent Edge: %d-%d\n", vp, wp);
-    //             return true;
-    //         }
-    //     } else {
-    //         kpuf.union(v, w);
-    //         key[v][w] = true;
-    //         key[w][v] = true;
-    //     }
-    //     return false;
-    // }
-
-    static boolean parallelPrimVsKruskal(double[][] G) {
-        int N = G.length;
-        boolean[][] key = new boolean[N][N];
-        EdgeWeightedGraph EG = buildGraph(G);
-        UF KPuf = new UF(N);
-
-        /**
-         * Prim Vars
-         */
-        Edge[] edgeTo = new Edge[N]; // shortest edge from tree to vertex
-        double[] distTo = new double[N]; // distTo[w] = edgeTo[w].weight()
-        boolean[] marked = new boolean[N]; // true if v in mst
-        IndexMinPQ<Double> Ppq; // eligible crossing edges
-        Edge ep;
-        double weight;
-
-        // Initialize Prim's disTo array
-        for(int v = 0; v < N; v++) {
-            distTo[v] = Double.POSITIVE_INFINITY;
-        }
-
-        // Initialize Prim's pq
-        Ppq = new IndexMinPQ<Double>(N);
-        distTo[0] = 0.0;
-        Ppq.insert(0, 0.0);
-
-        /**
-         * Kruskal Vars
-         */
-        Queue<Edge> mst = new Queue<Edge>();
-        MinPQ<Edge> Kpq = new MinPQ<Edge>();
-        UF uf;
-
-        // Initialize kruskal pq
-        for(Edge e : EG.edges()) {
-            Kpq.insert(e);
-        }
-
-        // Initialize Disjoint Set datastructure
-        uf = new UF(N);
-
-        /**
-         * Concurrent Prim's and Kruskal's
-         */
-         String KEdges = "";
-         String PEdges = "";
-         while( !Ppq.isEmpty() && ( !Kpq.isEmpty() && mst.size() < N-1 ) ) {
-             // prim operation
-             if(!Ppq.isEmpty()) {
-                 // visit the top of the heap
-                int vp = Ppq.delMin();
-                marked[vp] = true;
-
-                for (Edge e : EG.adj(vp)) {
-                    int wp = e.other(vp);
-                    if (marked[wp]) continue;
-                    if (e.weight() < distTo[wp]) {
-                        edgeTo[wp] = e;
-                        distTo[wp] = e.weight();
-                        if (Ppq.contains(wp)) Ppq.changeKey(wp, distTo[wp]);
-                        else Ppq.insert(wp, distTo[wp]);
-                    }
-
-                }
-
-                // kruskal
-                if(!Kpq.isEmpty() && mst.size() < N-1) {
-                    Edge ek = Kpq.delMin();
-                    int vk = ek.either();
-                    int wk = ek.other(vk);
-                    if(uf.connected(vk, wk)) continue;
-                    uf.union(vk, wk);
-                    mst.enqueue(ek);
-                    StdOut.printf("Kruskal <- (%s)\n", ek);
-                    KEdges += "("+ek.toString()+"), ";
-                    if(!key[vk][wk] || !key[wk][vk]) {
-                        if(KPuf.connected(vk, wk)) {
-                            StdOut.printf("Divergent Edge: %d-%d\n", vk, wk);
-                            return false;
-                        }
-                    }
-                    KPuf.union(vk, wk);
-                    key[vk][wk] = true;
-                    key[wk][vk] = true;
-                }
-
-                if(!Ppq.isEmpty()) {
-                    Edge primEdge = edgeTo[Ppq.minIndex()];
-                    StdOut.printf("Prim <- (%s)\n", primEdge);
-                    vp = primEdge.either();
-                    int wp = primEdge.other(vp);
-                    if(!key[vp][wp] || !key[wp][vp]) {
-                        if(KPuf.connected(vp, wp)) {
-                            StdOut.printf("Divergent Edge: %d-%d\n", vp, wp);
-                            return false;
-                        }
-                    }
-                    KPuf.union(vp, wp);
-                    key[vp][wp] = true;
-                    key[wp][vp] = true;
-                }
-
-             }
-         }
-
-         StdOut.printf("Kruskal's: \n %s\n", KEdges);
-         StdOut.printf("Prims's:\n");
-         StdOut.println();
-         for(Edge e : edgeTo) {
-             if(e != null && e.weight() != 0.0)
-                StdOut.printf("(%s), ", e.toString());
-         }
-
-         StdOut.println();
-         return true;
-    }
-
-    public static boolean cpPrimOpToKruskal(UF uf, boolean[][] key, Edge min) {
-        int vp = min.either();
-        int wp = min.other(vp);
-        // prim added an edge that kruskals hasn't
-        if(!key[vp][wp]) {
-            // are the ednpoints of prim's edge already in kruskal's?
-            if(uf.connected(vp, wp)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Build a MinPQ of edges from an adjacency matrix
-     * @param  G adjacency matrix
-     * @return pq  MinPQ
-     */
-    public static MinPQ<Edge> buildEdgeMinPQ(double[][] G) {
-        int V = G.length;
-        Edge e;
-        double weight;
-        MinPQ<Edge> pq = new MinPQ<Edge>();
-        for(int i = 0; i < V; i++) {
-            for(int j = i; j < V; j++) {
-                weight = G[i][j];
-                if(weight != 0) {
-                    e = new Edge(i, j, weight);
-                    pq.insert(e);
-                }
-            }
-        }
-        return pq;
     }
 
 	static boolean PrimVsKruskal(double[][] G){
-		int n = G.length;
-
-		/* Build the MST by Prim's and the MST by Kruskal's */
-		/* (You may add extra methods if necessary) */
-
-		/* ... Your code here ... */
-        EdgeWeightedGraph EG = buildGraph(G);
-        outputEdgeData(EG);
-
-        StdOut.println("Concurrent result: ");
-        if(parallelPrimVsKruskal(G)) {
-            StdOut.println("true");
-        } else {
-            StdOut.println("false");
-        }
-
 
 		/* Determine if the MST by Prim equals the MST by Kruskal */
-		boolean pvk = true;
+		boolean pvk = PvKConcurrent(G);
 		/* ... Your code here ... */
 
 		return pvk;
@@ -574,10 +392,7 @@ public class PrimVsKruskal{
 			System.out.printf("Adjacency matrix for the graph contains too few values.\n");
 			return;
 		}
-        boolean pvk = PvKConcurrent(G);
-        // boolean pvk = naiveSolution(G);
-        // G = generateRandomGraph(20);
-        // boolean pvk = PrimVsKruskal(G);
+        boolean pvk = PrimVsKruskal(G);
         System.out.printf("Does Prim MST = Kruskal MST? %b\n", pvk);
     }
 }
