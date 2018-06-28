@@ -167,7 +167,6 @@ public class PrimVsKruskal{
      */
     static boolean PvKConcurrent(double[][] G) {
         int N = G.length;
-        EdgeWeightedGraph EG = buildGraph(G);
         MyKruskalMST Kruskal = new MyKruskalMST(G);
         MyPrimMST Prim = new MyPrimMST(G);
         boolean[][] key = new boolean[N][N];
@@ -229,121 +228,6 @@ public class PrimVsKruskal{
 
 		return pvk;
 	}
-
-    /**
-     * @author Avery K.
-     *
-     * Prints out edges from an Iterable edgelist
-     * @param Edges Iterable edgelist
-     */
-    public static void outputEdgeData(EdgeWeightedGraph EG) {
-        StdOut.printf("Edge List: ");
-        printEdges(EG.edges());
-
-		PrimMST PMst = new PrimMST(EG);
-        KruskalMST KMST = new KruskalMST(EG);
-
-        StdOut.printf("Prim Edge List: ");
-        printEdges(PMst.edges());
-
-        StdOut.printf("Kruksal's Edge List: ");
-        printEdges(KMST.edges());
-    }
-
-    /**
-     * @author Avery K.
-     *
-     * Prints out edges from an Iterable edgelist
-     * @param Edges Iterable edgelist
-     */
-    public static void printEdges(Iterable<Edge> Edges) {
-        StdOut.println();
-        for(Edge e : Edges) {
-            StdOut.printf("(%s), ", e.toString());
-        }
-
-        StdOut.println();
-    }
-
-    /**
-     *
-     * @param  EG [description]
-     * @param  N  number of nodes in the graph
-     * @return    [description]
-     */
-    public static boolean naiveSolution(double[][] G) {
-        int N = G.length;
-        EdgeWeightedGraph EG = buildGraph(G);
-        boolean[][] key = new boolean[N][N];
-        int v, w;
-
-        PrimMST PMst = new PrimMST(EG);
-        KruskalMST KMst = new KruskalMST(EG);
-        Iterable<Edge> PMstEdges = PMst.edges();
-        Iterable<Edge> KMstEdges = KMst.edges();
-
-        for(Edge e : PMst.edges()) {
-            v = e.either();
-            w = e.other(v);
-            key[v][w] = true;
-        }
-
-        for(Edge e : KMst.edges()) {
-            v = e.either();
-            w = e.other(v);
-            if(!key[v][w]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * [generateRandomGraph description]
-     * @param  N [description]
-     * @return   [description]
-     */
-    public static double[][] generateRandomGraph(int N) {
-        double[][] G = new double[N][N];
-        double r;
-        for(int i = 0; i < N; i++) {
-            for(int j = i; j < N; j++) {
-                if(j != i) {
-                    if(G[i][j] == 0.0) {
-                        r = StdRandom.uniform(N-1);
-                        G[i][j] = r;
-                    }
-                }
-            }
-        }
-
-        return G;
-    }
-
-    /**
-     * @author Avery K.
-     *
-     * Builds an EdgeWeightedGraph from an adjacency matrix as input
-     * @param  G adjacency matrix
-     * @return EG  EdgeWeightedGraph
-     */
-    public static EdgeWeightedGraph buildGraph(double[][] G) {
-        int V = G.length;
-        Edge e;
-        double weight;
-
-        EdgeWeightedGraph EG = new EdgeWeightedGraph(V);
-        for(int i = 0; i < V; i++) {
-            for(int j = i; j < V; j++) {
-                weight = G[i][j];
-                if(weight != 0) {
-                    e = new Edge(i, j, weight);
-                    EG.addEdge(e);
-                }
-            }
-        }
-        return EG;
-    }
 
 	/* main()
 	   Contains code to test the PrimVsKruskal function. You may modify the
